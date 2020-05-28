@@ -8,6 +8,8 @@ namespace Lab4
 {
     public class Settings
     {
+        public const int StartMetricDelay = 5000;
+
         public const double DEVICE_1_MU = 0.23, 
                             DEVICE_2_TIME = 5 * TimeMeasure, 
                             DEVICE_3_TIME = 10 * TimeMeasure;
@@ -15,7 +17,7 @@ namespace Lab4
         public const int QUEUE_1_LIMIT = 9,
                          QUEUE_2_LIMIT = 3;
 
-        public const int TimeMeasure = 100;
+        public const int TimeMeasure = 10;
 
         private const double inputLambda = 0.22;
 

@@ -17,7 +17,7 @@ namespace Lab4
     [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
     public partial class Form1 : Form
     {
-        double _timeSecond;
+        int _timeSecond;
         int _timeMinute;
         int _timeHour;
 
@@ -29,7 +29,7 @@ namespace Lab4
             InitializeComponent();
 
             // div by 100 because I take one tick equal 100 part of seconds
-            timer1.Interval = (int)Settings.TimeMeasure/100;
+            timer1.Interval = (int)Settings.TimeMeasure;
 
             source = new Source();
 
@@ -37,6 +37,7 @@ namespace Lab4
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
+            buttonStart.Enabled = false;
             timer1.Start();
             new Thread(Start).Start();
         }
@@ -55,12 +56,28 @@ namespace Lab4
             tokenSource.Cancel();
             timer1.Stop();
 
-            source.GetInformation();
+            var information = source.GetInformation();
+
+            SetData(information);
+        }
+
+        private void SetData(InformationDTO information)
+        {
+            textBoxRejectionProcent.Text = information.RejectionProcent.ToString();
+            textBoxQueue1AvrLength.Text = information.Queue1AvrLength.ToString();
+            textBoxQueue2AvrLength.Text = information.Queue2AvrLength.ToString();
+            textBoxQueue1AvrTimeAsReal.Text = information.Queue1AvrTimeAsReal.ToString();
+            textBoxQueue2AvrTimeAsReal.Text = information.Queue2AvrTimeAsReal.ToString();
+            textBoxQueue1AvrTime.Text = information.Queue1AvrTime.ToString();
+            textBoxQueue2AvrTime.Text = information.Queue2AvrTime.ToString();
+            textBoxDevice1Loading.Text = information.Device1Loading.ToString();
+            textBoxDevice2Loading.Text = information.Device2Loading.ToString();
+            textBoxDevice3Loading.Text = information.Device3Loading.ToString();
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            _timeSecond += 0.01;
+            _timeSecond += 1;
 
             if (_timeSecond >= 60)
             {
@@ -74,5 +91,6 @@ namespace Lab4
             }
             timeLabel.Text = $"{_timeHour} h, {_timeMinute} m, {_timeSecond} s";
         }
+
     }
 }

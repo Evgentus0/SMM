@@ -61,7 +61,7 @@ namespace Lab4
 
         private void UpdateAvrLength(CancellationToken token)
         {
-            Thread.Sleep(3000);
+            Thread.Sleep(Settings.StartMetricDelay);
             double time = 1;
             LengthOfQueuePerTime = 0;
 

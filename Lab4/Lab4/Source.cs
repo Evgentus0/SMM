@@ -115,7 +115,7 @@ namespace Lab4
             }
         }
 
-        public void GetInformation()
+        public InformationDTO GetInformation()
         {
             double rejectionProcent = servedCustomers.Where(x => x.IsRejected).Count() / customerCount;
             queue1Length = queue1.AverageLentgth;
@@ -126,6 +126,24 @@ namespace Lab4
 
             var queue1AvrTime = queue1.LengthOfQueuePerTime / queue1.AllServed;
             var queue2AvrTime = queue2.LengthOfQueuePerTime / queue2.AllServed;
+
+            var device1Loading = device1.DeviceLoading;
+            var device2Loading = device2.DeviceLoading;
+            var device3Loading = device3.DeviceLoading;
+
+            return new InformationDTO()
+            {
+                RejectionProcent = rejectionProcent,
+                Queue1AvrLength = queue1Length,
+                Queue2AvrLength = queue2Length,
+                Queue1AvrTime = queue1AvrTime,
+                Queue2AvrTime = queue2AvrTime,
+                Queue1AvrTimeAsReal = queue1AvrTimeAsReal,
+                Queue2AvrTimeAsReal = queue2AvrTimeAsReal,
+                Device1Loading = device1Loading,
+                Device2Loading = device2Loading,
+                Device3Loading = device3Loading
+            };
         }
     }
 }

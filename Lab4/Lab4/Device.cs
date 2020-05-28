@@ -11,12 +11,16 @@ namespace Lab4
 
     public class Device : ControllerBase
     {
+        private bool isBusy;
 
-        CustomQueue queue;
 
-        double value;
+        private CustomQueue queue;
 
-        WorkMode mode;
+        private  double value;
+
+        private WorkMode mode;
+
+        public double DeviceLoading { get; private set; }
 
         public NextAction NextAction;
 
@@ -24,6 +28,8 @@ namespace Lab4
 
         public Device(string name, double value, CustomQueue queue, NextAction action, WorkMode mode) 
         {
+            DeviceLoading = 0;
+            isBusy = false;
             Name = name;
             NextAction = action;
             this.value = value;
@@ -32,12 +38,33 @@ namespace Lab4
             this.mode = mode;
         }
 
+        private void Update(CancellationToken stoppingToken)
+        {
+            Thread.Sleep(Settings.StartMetricDelay);
+            double loaded = 0;
+            double time = 1;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                Thread.Sleep(Settings.TimeMeasure);
+                if (isBusy)
+                {
+                    loaded++;
+                    DeviceLoading = loaded / time;
+                }
+                else
+                {
+                    DeviceLoading = loaded / time;
+                }
+                time++;
+            }
+        }
+
         public int Process() 
         {
             int time = 0;
             if(mode == WorkMode.Intensity)
             {
-                time = (int)(1.0 / value * Settings.TimeMeasure);
+                time = (int)((1.0 / value) * Settings.TimeMeasure);
             }
             else if(mode == WorkMode.Time)
             {
@@ -49,9 +76,12 @@ namespace Lab4
 
         public void ExecuteAsync(CancellationToken stoppingToken)
         {
+            new Thread(() => Update(stoppingToken)).Start();
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 var customer = queue.FirstCustomerOfQueue();
+                isBusy = true;
 
                 customer.CreateMessage($"Processed by {Name}");
                 customer.WriteToFile($"Processed by, {Name}");
@@ -60,6 +90,7 @@ namespace Lab4
                 Thread.Sleep(time);
 
                 NextAction(customer);
+                isBusy = false;
             }
         }
 
