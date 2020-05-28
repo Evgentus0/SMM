@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.Remoting;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Lab4
 {
@@ -16,25 +10,45 @@ namespace Lab4
         Queue<Customer> customersList;
 
         private bool HasLimit { get; }
-        int limit;
-        
+        private int limit;
+
+        public  double LengthOfQueuePerTime { get; private set; }
+        public  double AverageLentgth { get; private set; }
+
+        public int AllServed { get; private set; }
         public string Name { get; set; }
 
-        string path = @"C:\Users\Evgentus\Desktop\SmmLogs\QueueValues";
+        public int Count => customersList.Count;
 
-        public CustomQueue(string name)
+        static string path = @"C:\Users\Evgentus\Desktop\SmmLogs\QueueValues";
+
+        static CustomQueue()
         {
+            DirectoryInfo di = new DirectoryInfo(path);
+
+            foreach (FileInfo file in di.GetFiles())
+            {
+                file.Delete();
+            }
+        }
+
+        public CustomQueue(string name, CancellationToken token)
+        {
+            AllServed = 0;
+            AverageLentgth = 0;
             Name = name;
             _reachedLimit = false;
             HasLimit = false;
             customersList = new Queue<Customer>();
             resetEvent = new System.Threading.AutoResetEvent(false);
 
-            new Thread(UpdateTextBox).Start();
+            new Thread(() => UpdateAvrLength(token)).Start();
         }
 
-        public CustomQueue(string name, int limit)
+        public CustomQueue(string name, int limit, CancellationToken token)
         {
+            AllServed = 0;
+            AverageLentgth = 0;
             Name = name;
             _reachedLimit = false;
             this.limit = limit;
@@ -42,30 +56,29 @@ namespace Lab4
             customersList = new Queue<Customer>();
             resetEvent = new System.Threading.AutoResetEvent(false);
 
-            new Thread(UpdateTextBox).Start();
+            new Thread(() => UpdateAvrLength(token)).Start();
         }
 
-        private void UpdateTextBox()
+        private void UpdateAvrLength(CancellationToken token)
         {
-            Thread.Sleep(500);
+            Thread.Sleep(3000);
             double time = 1;
-            double count = 0;
+            LengthOfQueuePerTime = 0;
 
-            while (true)
+            while (!token.IsCancellationRequested)
             {
-                Thread.Sleep((int)Settings.TimeMeasure * 100);
+                Thread.Sleep(Settings.TimeMeasure);
 
-                count += this.customersList.Count;
-                var mes = (count / time).ToString();
-                using (var file = new StreamWriter($"{path}\\{Name}.txt"))
+                LengthOfQueuePerTime += customersList.Count;
+                AverageLentgth = LengthOfQueuePerTime / time;
+                var mes = AverageLentgth.ToString();
+                using (StreamWriter file = File.AppendText($"{path}\\{Name}.txt"))
                 {
                     file.WriteLine(mes);
                 }
-                
-
                 time++;
             }
-            
+
         }
 
         public Customer FirstCustomerOfQueue()
@@ -83,6 +96,10 @@ namespace Lab4
                 resetEvent.Set();
             }
             var customer = customersList.Dequeue();
+            AllServed++;
+
+            customer.Stopwatch.Stop();
+            customer.Timings.Add(Name, (customer.Stopwatch.ElapsedMilliseconds / Settings.TimeMeasure));
 
             customer.CreateMessage($"Dequeue in queue {Name}");
             customer.WriteToFile($"Dequeue in queue, {Name}");
@@ -102,6 +119,8 @@ namespace Lab4
 
             customer.CreateMessage($"Enqueue in queue {Name}");
             customer.WriteToFile($"Enqueue in queue, {Name}");
+
+            customer.Stopwatch.Start();
 
             customersList.Enqueue(customer);
             if (customersList.Count == 1)

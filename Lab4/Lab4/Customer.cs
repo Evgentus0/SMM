@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,12 +13,16 @@ namespace Lab4
         private string message;
 
         const string path = @"C:\Users\Evgentus\Desktop\SmmLogs\messages\logs.csv";
-        const string finalPath = @"C:\Users\Evgentus\Desktop\SmmLogs\finalMessages\finalLog.txt";
+        const string finalPath = @"C:\Users\Evgentus\Desktop\SmmLogs\finalMessages\finalLog.csv";
 
         static object locker = new object();
-
-
+        
         public string Name { get; set; }
+        public bool IsRejected { get; set; }
+
+
+        public Dictionary<string, long> Timings { get; set; }
+        public Stopwatch Stopwatch { get; }
 
         static Customer()
         {
@@ -27,7 +32,10 @@ namespace Lab4
 
         public Customer(string name)
         {
+            Timings = new Dictionary<string, long>();
+            Stopwatch = new Stopwatch();
             Name = name;
+            IsRejected = false;
             message = $"{name}, ";
         }
 
